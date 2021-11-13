@@ -2,17 +2,10 @@ package main
 
 import (
 	"fmt"
-	"golang_todoapp/config"
-	"log"
+	"golang_todoapp/models"
 )
 
 func main() {
-	//設定値を出力
-	fmt.Println(config.Config.Port)
-	fmt.Println(config.Config.SQLDriver)
-	fmt.Println(config.Config.DbName)
-	fmt.Println(config.Config.LogFile)
-
-	//ログを出力
-	log.Println("test")
+	//modelsパッケージで指定したDbの読み込み値を出力
+	fmt.Println(models.Db)
 }
