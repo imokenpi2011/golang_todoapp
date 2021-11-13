@@ -9,11 +9,11 @@ import (
 
 // 設定一覧を指定
 type ConfigList struct {
-	Port      string
-	SQLDriver string
-	DbName    string
-	LogFile   string
-	Static    string
+	Port      string //ポート番号
+	SQLDriver string //SQLドライバ
+	DbName    string //DB名
+	LogFile   string //ログファイル名
+	Static    string //Viewファイルの読み込みディレクトリ
 }
 
 //Configインスタンスを定義
