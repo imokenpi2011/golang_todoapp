@@ -6,6 +6,7 @@ import (
 	"os"
 )
 
+//ログファイルの読み込み処理
 func LoggingSettings(logFile string) {
 	//ログファイルを読み込む。ファイルが無い場合は作成する
 	logfile, err := os.OpenFile(logFile, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
