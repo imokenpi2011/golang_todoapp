@@ -1,6 +1,7 @@
 package config
 
 import (
+	"golang_todoapp/utils"
 	"log"
 
 	"gopkg.in/go-ini/ini.v1"
@@ -22,6 +23,8 @@ var Config ConfigList
 func init() {
 	//設定の読み込み処理
 	LoadConfig()
+	//ログの読み込みを設定
+	utils.LoggingSettings(Config.LogFile)
 }
 
 //設定を読み込む
