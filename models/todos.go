@@ -72,3 +72,35 @@ func GetTodos() (todos []Todo, err error) {
 
 	return todos, err
 }
+
+//ユーザーに応じたタスク一覧を取得する
+func (u *User) GetTodosByUser() (todos []Todo, err error) {
+	//SQL文を指定
+	cmd := `select id, content, user_id, created_at from todos
+	where user_id = ?`
+
+	//取得処理を実行
+	rows, err := Db.Query(cmd, u.ID)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	//タスクの取得処理
+	for rows.Next() {
+		var todo Todo
+		err = rows.Scan(
+			&todo.ID,
+			&todo.Content,
+			&todo.UserID,
+			&todo.CreatedAt,
+		)
+
+		if err != nil {
+			log.Fatalln(err)
+		}
+		todos = append(todos, todo)
+	}
+	rows.Close()
+
+	return todos, err
+}
