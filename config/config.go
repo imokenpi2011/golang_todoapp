@@ -1,6 +1,7 @@
 package config
 
 import (
+	"golang_todoapp/projectpath"
 	"golang_todoapp/utils"
 	"log"
 
@@ -30,7 +31,10 @@ func init() {
 //設定を読み込む
 func LoadConfig() {
 	// 設定を記載したiniファイルを読み込む
-	cfg, err := ini.Load("config.ini")
+	dir := projectpath.Root
+	configDir := dir + "/config.ini"
+	//root直下の設定ファイルを読み込む
+	cfg, err := ini.Load(configDir)
 	if err != nil {
 		log.Fatalln(err)
 	}
