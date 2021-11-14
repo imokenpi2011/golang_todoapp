@@ -104,3 +104,17 @@ func (u *User) GetTodosByUser() (todos []Todo, err error) {
 
 	return todos, err
 }
+
+//タスクの更新処理
+func (t *Todo) UpdateTodo() error {
+	//SQL文を指定
+	cmd := `update todos set content = ?, user_id = ? where id = ?`
+
+	//更新処理を実行
+	_, err = Db.Exec(cmd, t.Content, t.UserID, t.ID)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	return err
+}
