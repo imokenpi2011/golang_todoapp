@@ -70,3 +70,16 @@ func (u *User) UpdateUser() (err error) {
 	}
 	return err
 }
+
+//ユーザーを削除する
+func (u *User) DeleteUser() (err error) {
+	//SQL文を作成
+	cmd := `delete from users where id = ?`
+
+	//削除処理を実行
+	_, err = Db.Exec(cmd, u.ID)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	return err
+}
