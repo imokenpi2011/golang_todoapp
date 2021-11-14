@@ -1,9 +1,24 @@
 package controllers
 
 import (
+	"fmt"
 	"golang_todoapp/config"
 	"net/http"
+	"text/template"
 )
+
+//ページを表示する
+func generateHTML(w http.ResponseWriter, data interface{}, filenames ...string) {
+	//html一覧を読み込む
+	var files []string
+	for _, file := range filenames {
+		files = append(files, fmt.Sprintf("app/views/templates/%s.html", file))
+	}
+
+	//レイアウトを明示的に読み込む
+	templates := template.Must(template.ParseFiles(files...))
+	templates.ExecuteTemplate(w, "layout", data)
+}
 
 //サーバーを起動する
 func StartMainServer() error {
