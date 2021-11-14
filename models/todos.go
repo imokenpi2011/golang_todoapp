@@ -1,6 +1,8 @@
 package models
 
 import (
+	"database/sql"
+	"golang_todoapp/clock"
 	"log"
 	"time"
 )
@@ -13,7 +15,7 @@ type Todo struct {
 }
 
 //タスクを作成する
-func (u *User) CreateTodo(content string) (err error) {
+func (u *User) CreateTodo(Db *sql.DB, content string) (err error) {
 	//SQL文を設定
 	cmd := `insert into todos (
 		content,
@@ -21,7 +23,7 @@ func (u *User) CreateTodo(content string) (err error) {
 		created_at) values (?,?,?)`
 
 	//作成処理を実行
-	_, err = Db.Exec(cmd, content, u.ID, time.Now())
+	_, err = Db.Exec(cmd, content, u.ID, clock.Now())
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -29,7 +31,7 @@ func (u *User) CreateTodo(content string) (err error) {
 }
 
 //指定したIDのタスクを取得する
-func GetTodo(id int) (todo Todo, err error) {
+func GetTodo(Db *sql.DB, id int) (todo Todo, err error) {
 	todo = Todo{}
 
 	//SQL文を指定
@@ -46,7 +48,7 @@ func GetTodo(id int) (todo Todo, err error) {
 }
 
 //タスクの全一覧を取得する
-func GetTodos() (todos []Todo, err error) {
+func GetTodos(Db *sql.DB) (todos []Todo, err error) {
 	//SQL文を指定
 	cmd := `select id, content, user_id, created_at from todos`
 	rows, err := Db.Query(cmd)
@@ -74,7 +76,7 @@ func GetTodos() (todos []Todo, err error) {
 }
 
 //ユーザーに応じたタスク一覧を取得する
-func (u *User) GetTodosByUser() (todos []Todo, err error) {
+func (u *User) GetTodosByUser(Db *sql.DB) (todos []Todo, err error) {
 	//SQL文を指定
 	cmd := `select id, content, user_id, created_at from todos
 	where user_id = ?`
@@ -106,7 +108,7 @@ func (u *User) GetTodosByUser() (todos []Todo, err error) {
 }
 
 //タスクの更新処理
-func (t *Todo) UpdateTodo() error {
+func (t *Todo) UpdateTodo(Db *sql.DB) error {
 	//SQL文を指定
 	cmd := `update todos set content = ?, user_id = ? where id = ?`
 
@@ -120,7 +122,7 @@ func (t *Todo) UpdateTodo() error {
 }
 
 //タスクの削除処理
-func (t *Todo) DeleteTodo() error {
+func (t *Todo) DeleteTodo(Db *sql.DB) error {
 	//SQL文を指定
 	cmd := `delete from todos where id = ?`
 
