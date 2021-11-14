@@ -27,3 +27,48 @@ func (u *User) CreateTodo(content string) (err error) {
 	}
 	return err
 }
+
+//指定したIDのタスクを取得する
+func GetTodo(id int) (todo Todo, err error) {
+	todo = Todo{}
+
+	//SQL文を指定
+	cmd := `select id, content, user_id, created_at from todos where id = ?`
+
+	//取得処理を実行
+	err = Db.QueryRow(cmd, id).Scan(
+		&todo.ID,
+		&todo.Content,
+		&todo.UserID,
+		&todo.CreatedAt,
+	)
+	return todo, err
+}
+
+//タスクの全一覧を取得する
+func GetTodos() (todos []Todo, err error) {
+	//SQL文を指定
+	cmd := `select id, content, user_id, created_at from todos`
+	rows, err := Db.Query(cmd)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	//タスク情報の取得処理
+	for rows.Next() {
+		var todo Todo
+		err := rows.Scan(
+			&todo.ID,
+			&todo.Content,
+			&todo.UserID,
+			&todo.CreatedAt,
+		)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		todos = append(todos, todo)
+	}
+	rows.Close()
+
+	return todos, err
+}
