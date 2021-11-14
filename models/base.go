@@ -18,6 +18,7 @@ var err error
 
 const (
 	tableNameUser = "users"
+	tableNameTodo = "todos"
 )
 
 //初期処理
@@ -39,6 +40,16 @@ func init() {
 
 	//SQL実行
 	Db.Exec(cmdU)
+
+	//存在しない場合はtodosテーブルを作成する
+	cmdT := fmt.Sprintf(`CREATE TABLE IF NOT EXISTS %s(
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		content TEXT,
+		user_id INTEGER,
+		created_at DATETIME)`, tableNameTodo)
+
+	//SQL実行
+	Db.Exec(cmdT)
 }
 
 //UUIDを作成する
