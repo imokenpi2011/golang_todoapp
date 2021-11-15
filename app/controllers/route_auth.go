@@ -39,3 +39,52 @@ func signup(w http.ResponseWriter, r *http.Request) {
 func login(w http.ResponseWriter, r *http.Request) {
 	generateHTML(w, "Hello", "layout", "public_navbar", "login")
 }
+
+//ログインの検証
+func authenticate(w http.ResponseWriter, r *http.Request) {
+	//フォームの値を検証する
+	err := r.ParseForm()
+	if err != nil {
+		log.Println(err)
+	}
+
+	//フォームから値をもとにユーザーを検索する
+	user, err := models.GetUserByEmail(r.PostFormValue("email"))
+	if err != nil {
+		log.Panicln(err)
+		http.Redirect(w, r, "/login", http.StatusFound)
+	}
+
+	//パスワードを検証する
+	if user.PassWord == models.Encrypt(r.PostFormValue("password")) {
+		//セッションを作成する
+		err := user.CreateSession()
+		if err != nil {
+			log.Println(err)
+		}
+
+		//作成したセッションを取得する
+		session, err := models.GetSession(user.ID, user.Email)
+		if err != nil {
+			log.Println(err)
+		}
+		if err != nil {
+			log.Println(err)
+		}
+
+		//クッキーを作成する
+		cookie := http.Cookie{
+			Name:     "_cookie",
+			Value:    session.UUID,
+			HttpOnly: true,
+		}
+		http.SetCookie(w, &cookie)
+
+		//ログインに成功したらトップに遷移する
+		http.Redirect(w, r, "/", http.StatusFound)
+
+	} else {
+		//ログインに失敗した場合はログインページに遷移する
+		http.Redirect(w, r, "/login", http.StatusFound)
+	}
+}
