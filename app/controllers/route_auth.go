@@ -10,7 +10,15 @@ import (
 func signup(w http.ResponseWriter, r *http.Request) {
 	//GETの時に実行する
 	if r.Method == "GET" {
-		generateHTML(w, "Hello", "layout", "public_navbar", "signup")
+		//セッションを取得する
+		_, err := session(w, r)
+		if err != nil {
+			//セッションが存在しない場合はサインアップ画面に遷移する
+			generateHTML(w, "Hello", "layout", "public_navbar", "signup")
+		} else {
+			//セッションが存在する場合はタスク表示画面に遷移する
+			http.Redirect(w, r, "/todos", http.StatusFound)
+		}
 	} else if r.Method == "POST" {
 		//POSTの時に実行する
 		//入力した値を受け取る
@@ -37,7 +45,15 @@ func signup(w http.ResponseWriter, r *http.Request) {
 
 //ログイン画面の処理
 func login(w http.ResponseWriter, r *http.Request) {
-	generateHTML(w, "Hello", "layout", "public_navbar", "login")
+	//セッションを取得する
+	_, err := session(w, r)
+	if err != nil {
+		//セッションが存在しない場合はログイン画面に遷移する
+		generateHTML(w, "Hello", "layout", "public_navbar", "login")
+	} else {
+		//セッションが存在する場合はタスク表示画面に遷移する
+		http.Redirect(w, r, "/todos", http.StatusFound)
+	}
 }
 
 //ログインの検証
