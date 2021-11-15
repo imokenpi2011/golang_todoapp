@@ -29,6 +29,7 @@ func StartMainServer() error {
 	//トップページ。controller/route_main.goで管理
 	http.HandleFunc("/", top)
 	http.HandleFunc("/signup", signup)
+	http.HandleFunc("/login", login)
 
 	//サーバを起動する。(起動ポート,関係ないページの場合404を返す様にする)
 	return http.ListenAndServe(":"+config.Config.Port, nil)

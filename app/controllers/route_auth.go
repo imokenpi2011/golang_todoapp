@@ -34,3 +34,8 @@ func signup(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/", http.StatusFound)
 	}
 }
+
+//ログイン画面の処理
+func login(w http.ResponseWriter, r *http.Request) {
+	generateHTML(w, "Hello", "layout", "public_navbar", "login")
+}
