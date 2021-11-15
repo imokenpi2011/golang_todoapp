@@ -6,5 +6,5 @@ import (
 
 //top画面に飛ばす
 func signup(w http.ResponseWriter, r *http.Request) {
-	generateHTML(w, "Hello", "layout", "signup")
+	generateHTML(w, "Hello", "layout", "public_navbar", "signup")
 }
