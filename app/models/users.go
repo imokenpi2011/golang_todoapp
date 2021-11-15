@@ -83,3 +83,20 @@ func (u *User) DeleteUser() (err error) {
 	}
 	return err
 }
+
+//ログイン用ユーザー検索
+func GetUserByEmail(email string) (user User, err error) {
+	user = User{}
+	cmd := `select id, uuid, name, email, password, created_at
+	from users where email = ?`
+	err = Db.QueryRow(cmd, email).Scan(
+		&user.ID,
+		&user.UUID,
+		&user.Name,
+		&user.Email,
+		&user.PassWord,
+		&user.CreatedAt,
+	)
+
+	return user, err
+}
