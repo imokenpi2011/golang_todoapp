@@ -104,3 +104,19 @@ func authenticate(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/login", http.StatusFound)
 	}
 }
+
+//ログアウトする
+func logout(w http.ResponseWriter, r *http.Request) {
+	//クッキーを取得
+	cookie, err := r.Cookie("_cookie")
+	if err != nil {
+		log.Println(err)
+	}
+
+	//クッキーの存在エラー以外の場合はセッションを削除する
+	if err != http.ErrNoCookie {
+		session := models.Session{UUID: cookie.Value}
+		session.DeleteSessionByUUID()
+	}
+	http.Redirect(w, r, "/login", http.StatusFound)
+}
