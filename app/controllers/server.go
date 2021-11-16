@@ -48,6 +48,8 @@ func StartMainServer() error {
 	http.HandleFunc("/logout", logout)
 	http.HandleFunc("/authenticate", authenticate)
 	http.HandleFunc("/todos", index)
+	http.HandleFunc("/todos/new", todoNew)
+	http.HandleFunc("/todos/save", todoSave)
 
 	//サーバを起動する。(起動ポート,関係ないページの場合404を返す様にする)
 	return http.ListenAndServe(":"+config.Config.Port, nil)
