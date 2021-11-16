@@ -52,6 +52,21 @@ func GetSession(id int, email string) (session Session, err error) {
 	return session, err
 }
 
+//セッションをもとにユーザーを取得する
+func (sess *Session) GetUserBySession() (user User, err error) {
+	user = User{}
+	cmd := `select id, uuid, name, email, created_at FROM users
+	where id = ?`
+	err = Db.QueryRow(cmd, sess.UserID).Scan(
+		&user.ID,
+		&user.UUID,
+		&user.Name,
+		&user.Email,
+		&user.CreatedAt)
+
+	return user, err
+}
+
 //セッションをUUIDで検証する
 func (sess *Session) CheckSession() (valid bool, err error) {
 	cmd := `select id, uuid, email, user_id, created_at
