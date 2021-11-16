@@ -83,7 +83,7 @@ func todoSave(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-//タスク作成処理
+//タスク編集処理
 func todoEdit(w http.ResponseWriter, r *http.Request, id int) {
 	//セッションを取得する
 	sess, err := session(w, r)

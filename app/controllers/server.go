@@ -5,6 +5,8 @@ import (
 	"golang_todoapp/app/models"
 	"golang_todoapp/config"
 	"net/http"
+	"regexp"
+	"strconv"
 	"text/template"
 )
 
@@ -35,6 +37,33 @@ func session(w http.ResponseWriter, r *http.Request) (sess models.Session, err e
 	return sess, err
 }
 
+//タスク編集・更新のURLがマッチしているか検証
+var validPath = regexp.MustCompile("^/todos/(edit|update)/([0-9]+$)")
+
+//URLの検証
+func parseURL(fn func(http.ResponseWriter, *http.Request, int)) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		//タスク編集のURLとマッチしているか検証する
+		// 例) /todis/edit/1
+		q := validPath.FindStringSubmatch(r.URL.Path)
+		if q == nil {
+			//マッチしない場合は404でリターンする
+			http.NotFound(w, r)
+			return
+		}
+
+		//URLのIDの部分が数字であるか検証
+		qi, err := strconv.Atoi(q[2])
+		if err != nil {
+			//マッチしない場合は404でリターンする
+			http.NotFound(w, r)
+			return
+		}
+
+		fn(w, r, qi)
+	}
+}
+
 //サーバーを起動する
 func StartMainServer() error {
 	files := http.FileServer(http.Dir(config.Config.Static))
@@ -42,6 +71,7 @@ func StartMainServer() error {
 	//本来はstatic配下を読み込むが、StripPrefixでstaticを取り除いている
 	http.Handle("/static/", http.StripPrefix("/static/", files))
 	//トップページ。controller/route_main.goで管理
+	//末尾に[/]がついていない場合は完全一致、そうでない場合は含まれていれば良い
 	http.HandleFunc("/", top)
 	http.HandleFunc("/signup", signup)
 	http.HandleFunc("/login", login)
@@ -50,6 +80,7 @@ func StartMainServer() error {
 	http.HandleFunc("/todos", index)
 	http.HandleFunc("/todos/new", todoNew)
 	http.HandleFunc("/todos/save", todoSave)
+	http.HandleFunc("/todos/edit/", parseURL(todoEdit))
 
 	//サーバを起動する。(起動ポート,関係ないページの場合404を返す様にする)
 	return http.ListenAndServe(":"+config.Config.Port, nil)
