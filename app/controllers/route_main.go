@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"golang_todoapp/app/models"
 	"log"
 	"net/http"
 )
@@ -79,5 +80,29 @@ func todoSave(w http.ResponseWriter, r *http.Request) {
 
 		//タスク一覧のページに遷移する
 		http.Redirect(w, r, "/todos", http.StatusFound)
+	}
+}
+
+//タスク作成処理
+func todoEdit(w http.ResponseWriter, r *http.Request, id int) {
+	//セッションを取得する
+	sess, err := session(w, r)
+	if err != nil {
+		//セッションが存在しない場合はログインページに遷移する
+		http.Redirect(w, r, "/login", http.StatusFound)
+	} else {
+		//セッションの確認
+		_, err := sess.GetUserBySession()
+		if err != nil {
+			log.Println(err)
+		}
+		//編集対象のタスクを取得する
+		t, err := models.GetTodo(id)
+		if err != nil {
+			log.Println(err)
+		}
+
+		//編集画面に遷移する
+		generateHTML(w, t, "layout", "private_navbar", "todo_edit")
 	}
 }
