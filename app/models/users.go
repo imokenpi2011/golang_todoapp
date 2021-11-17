@@ -12,6 +12,7 @@ type User struct {
 	Email     string    //Eメール
 	PassWord  string    //パスワード
 	CreatedAt time.Time //作成日
+	Todos     []Todo    //タスク一覧
 }
 
 //ユーザーを作成する
