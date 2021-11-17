@@ -106,3 +106,35 @@ func todoEdit(w http.ResponseWriter, r *http.Request, id int) {
 		generateHTML(w, t, "layout", "private_navbar", "todo_edit")
 	}
 }
+
+//タスクを更新する
+func todoUpdate(w http.ResponseWriter, r *http.Request, id int) {
+	//セッションを取得する
+	sess, err := session(w, r)
+	if err != nil {
+		//セッションが存在しない場合はログインページに遷移する
+		http.Redirect(w, r, "/login", http.StatusFound)
+	} else {
+		//フォームの値を取得する
+		err := r.ParseForm()
+		if err != nil {
+			log.Println(err)
+		}
+		//ユーザー情報の取得
+		user, err := sess.GetUserBySession()
+		if err != nil {
+			log.Println(err)
+		}
+		//入力した内容を取得してTodoインスタンスを再生成する
+		content := r.PostFormValue("content")
+		t := &models.Todo{ID: id, Content: content, UserID: user.ID}
+
+		//タスクの更新処理
+		if err := t.UpdateTodo(); err != nil {
+			log.Println(err)
+		}
+
+		//更新に成功したらタスク一覧に遷移する
+		http.Redirect(w, r, "/todos", http.StatusFound)
+	}
+}
