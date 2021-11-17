@@ -138,3 +138,33 @@ func todoUpdate(w http.ResponseWriter, r *http.Request, id int) {
 		http.Redirect(w, r, "/todos", http.StatusFound)
 	}
 }
+
+//タスクの削除処理
+func todoDelete(w http.ResponseWriter, r *http.Request, id int) {
+	//セッションを取得する
+	sess, err := session(w, r)
+	if err != nil {
+		//セッションが存在しない場合はログインページに遷移する
+		http.Redirect(w, r, "/login", http.StatusFound)
+	} else {
+		//セッションに対応したユーザーの確認
+		_, err := sess.GetUserBySession()
+		if err != nil {
+			log.Println(err)
+		}
+
+		//削除対象のタスクを取得
+		t, err := models.GetTodo(id)
+		if err != nil {
+			log.Println(err)
+		}
+
+		//タスクを削除する
+		if err := t.DeleteTodo(); err != nil {
+			log.Println(err)
+		}
+
+		//削除に成功したらタスク一覧に遷移する
+		http.Redirect(w, r, "/todos", http.StatusFound)
+	}
+}

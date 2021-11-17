@@ -38,7 +38,7 @@ func session(w http.ResponseWriter, r *http.Request) (sess models.Session, err e
 }
 
 //タスク編集・更新のURLがマッチしているか検証
-var validPath = regexp.MustCompile("^/todos/(edit|update)/([0-9]+$)")
+var validPath = regexp.MustCompile("^/todos/(edit|update|delete)/([0-9]+$)")
 
 //URLの検証
 func parseURL(fn func(http.ResponseWriter, *http.Request, int)) http.HandlerFunc {
@@ -82,6 +82,7 @@ func StartMainServer() error {
 	http.HandleFunc("/todos/save", todoSave)
 	http.HandleFunc("/todos/edit/", parseURL(todoEdit))
 	http.HandleFunc("/todos/update/", parseURL(todoUpdate))
+	http.HandleFunc("/todos/delete/", parseURL(todoDelete))
 
 	//サーバを起動する。(起動ポート,関係ないページの場合404を返す様にする)
 	return http.ListenAndServe(":"+config.Config.Port, nil)
