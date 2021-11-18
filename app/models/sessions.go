@@ -21,7 +21,7 @@ func (u *User) CreateSession() (err error) {
 		uuid,
 		email,
 		user_id,
-		created_at) values (?,?,?,?)`
+		created_at) values ($1,$2,$3,$4)`
 
 	//セッションの作成処理
 	_, err = Db.Exec(cmd1, createUUID(), u.Email, u.ID, time.Now())
@@ -39,7 +39,7 @@ func GetSession(id int, email string) (session Session, err error) {
 
 	//SQL文を設定
 	cmd := `select id, uuid, email, user_id, created_at
-	from sessions where user_id = ? and email = ?`
+	from sessions where user_id = $1 and email = $2`
 
 	//セッション情報の取得
 	err = Db.QueryRow(cmd, id, email).Scan(
@@ -56,7 +56,7 @@ func GetSession(id int, email string) (session Session, err error) {
 func (sess *Session) GetUserBySession() (user User, err error) {
 	user = User{}
 	cmd := `select id, uuid, name, email, created_at FROM users
-	where id = ?`
+	where id = $1`
 	err = Db.QueryRow(cmd, sess.UserID).Scan(
 		&user.ID,
 		&user.UUID,
@@ -70,7 +70,7 @@ func (sess *Session) GetUserBySession() (user User, err error) {
 //セッションをUUIDで検証する
 func (sess *Session) CheckSession() (valid bool, err error) {
 	cmd := `select id, uuid, email, user_id, created_at
-	from sessions where uuid = ?`
+	from sessions where uuid = $1`
 
 	err = Db.QueryRow(cmd, sess.UUID).Scan(
 		&sess.ID,
@@ -94,7 +94,7 @@ func (sess *Session) CheckSession() (valid bool, err error) {
 
 //UUIDに一致するセッションを削除する。
 func (sess *Session) DeleteSessionByUUID() (err error) {
-	cmd := `delete from sessions where uuid = ?`
+	cmd := `delete from sessions where uuid = $1`
 	_, err = Db.Exec(cmd, sess.UUID)
 	if err != nil {
 		log.Fatalln(err)

@@ -23,7 +23,7 @@ func (u *User) CreateUser() (err error) {
 		name,
 		email,
 		password,
-		created_at) values (?, ?, ?, ?, ?)`
+		created_at) values ($1, $2, $3, $4, $5)`
 
 	//作成処理を実行
 	_, err = Db.Exec(cmd,
@@ -45,7 +45,7 @@ func GetUser(id int) (user User, err error) {
 	user = User{}
 
 	//SQL文を設定
-	cmd := `select id, uuid, name, email, password, created_at from users where id = ?`
+	cmd := `select id, uuid, name, email, password, created_at from users where id = $1`
 
 	//取得処理を実行
 	err = Db.QueryRow(cmd, id).Scan(
@@ -62,7 +62,7 @@ func GetUser(id int) (user User, err error) {
 //ユーザーを更新する
 func (u *User) UpdateUser() (err error) {
 	//SQL文を設定
-	cmd := `update users set name = ?, email = ? where id = ?`
+	cmd := `update users set name = $1, email = $2 where id = $3`
 
 	//更新処理を実行
 	_, err = Db.Exec(cmd, u.Name, u.Email, u.ID)
@@ -75,7 +75,7 @@ func (u *User) UpdateUser() (err error) {
 //ユーザーを削除する
 func (u *User) DeleteUser() (err error) {
 	//SQL文を作成
-	cmd := `delete from users where id = ?`
+	cmd := `delete from users where id = $1`
 
 	//削除処理を実行
 	_, err = Db.Exec(cmd, u.ID)
@@ -89,7 +89,7 @@ func (u *User) DeleteUser() (err error) {
 func GetUserByEmail(email string) (user User, err error) {
 	user = User{}
 	cmd := `select id, uuid, name, email, password, created_at
-	from users where email = ?`
+	from users where email = $1`
 	err = Db.QueryRow(cmd, email).Scan(
 		&user.ID,
 		&user.UUID,

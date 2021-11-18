@@ -5,6 +5,7 @@ import (
 	"golang_todoapp/app/models"
 	"golang_todoapp/config"
 	"net/http"
+	"os"
 	"regexp"
 	"strconv"
 	"text/template"
@@ -85,5 +86,6 @@ func StartMainServer() error {
 	http.HandleFunc("/todos/delete/", parseURL(todoDelete))
 
 	//サーバを起動する。(起動ポート,関係ないページの場合404を返す様にする)
-	return http.ListenAndServe(":"+config.Config.Port, nil)
+	port := os.Getenv("PORT")
+	return http.ListenAndServe(":"+port, nil)
 }
