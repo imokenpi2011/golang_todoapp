@@ -1,149 +1,184 @@
 package models
 
-//参考：https://uzimihsr.github.io/post/2021-04-30-golang-test-with-go-sqlmock/
+//参考：https://pkg.go.dev/github.com/DATA-DOG/go-sqlmock#section-readme
 import (
-	"errors"
-	"golang_todoapp/clock"
+	"database/sql"
+	"database/sql/driver"
+	"log"
 	"regexp"
 	"testing"
 	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/go-test/deep"
+	"github.com/stretchr/testify/assert"
 )
 
-//タスク登録に使用するユーザーを定義
-var u = &User{
+//テストに使用するユーザーを定義
+var testUser = &User{
 	ID:       9999999,
 	Name:     "testuser",
 	Email:    "tests@exqmaple.com",
 	PassWord: "pass",
 }
 
-var taskName string = "testTask"
+//テストに使用するタスクを定義
+var testTodo = &Todo{
+	ID:        1000000,
+	Content:   "testTask",
+	UserID:    9999999,
+	CreatedAt: time.Now(),
+}
+
+//mockを作成する
+func NewMock() (*sql.DB, sqlmock.Sqlmock) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		log.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+
+	return db, mock
+}
 
 //登録処理のテスト
 func TestTodoCreate(t *testing.T) {
-	cmd := "insert into todos \\(content,user_id,created_at\\) values \\(?,?,?\\)"
+	cmd := "insert into todos (content,user_id,created_at) values (?,?,?)"
 
-	clock.Set((time.Date(2020, 1, 1, 0, 0, 0, 0, time.Local)))
+	//dbモックを作成
+	Db, mock := NewMock()
+	defer Db.Close()
 
-	t.Run(
-		"Create_正常系",
-		func(t *testing.T) {
-			//dbモックを作成
-			Db, mock, err := sqlmock.New()
-			if err != nil {
-				t.Error(err.Error())
-			}
-			defer Db.Close()
+	//SQL実行の期待値を定義
+	mock.ExpectExec(regexp.QuoteMeta(cmd)).
+		WithArgs(testTodo.Content, testUser.ID, AnyTime{}).
+		WillReturnResult(sqlmock.NewResult(1, 1))
 
-			//SQL実行の期待値を定義
-			mock.ExpectBegin()
-			mock.ExpectExec(regexp.QuoteMeta(cmd)).
-				WithArgs(taskName, u.ID, clock.Now()).
-				WillReturnResult(sqlmock.NewResult(1, 1))
-			mock.ExpectCommit()
+	//作成処理を実行
+	//メソッド内のSQLでtime.Now()を使用している場合はクエリ自体のテストのみ行う
+	_, err = Db.Exec(cmd, testTodo.Content, testUser.ID, time.Now())
+	if err != nil {
+		t.Error(err.Error())
+	}
 
-			//作成処理を実行
-			err = u.CreateTodo(Db, taskName)
-			if err != nil {
-				t.Error(err.Error())
-			}
-		},
-	)
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+	}
 
-	t.Run(
-		"Create_異常系",
-		func(t *testing.T) {
-			//dbモックを作成
-			Db, mock, err := sqlmock.New()
-			if err != nil {
-				t.Error(err.Error())
-			}
-			defer Db.Close()
-
-			//SQL実行時にエラーを起こすよう定義
-			mock.ExpectBegin()
-			mock.ExpectExec(regexp.QuoteMeta(cmd)).
-				WithArgs(taskName, u.ID, clock.Now()).
-				WillReturnResult(sqlmock.NewErrorResult(errors.New("ERROR!!!"))).
-				WillReturnError(errors.New("INSERT FAILED!!!"))
-			mock.ExpectRollback()
-
-			//作成処理を実行
-			err = u.CreateTodo(Db, taskName)
-
-			//正常終了した場合はエラー
-			if err == nil {
-				t.Error("An error should have occurred.")
-			}
-		},
-	)
 }
 
-// //登録するタスクを定義
-// var taskList = []string{"task01", "task02"}
+//IDに応じた取得処理のテスト
+func TestTodoGet(t *testing.T) {
+	cmd := "select id, content, user_id, created_at from todos where id = ?"
 
-// //タスク更新時の定数
-// var updateContent = "updatetask"
+	//dbモックを作成
+	Db, mock := NewMock()
+	defer Db.Close()
 
-// //todo関連のcrudテストを行う
-// func TestTodos(t *testing.T) {
+	//取得の期待値を定義
+	mock.ExpectQuery(regexp.QuoteMeta(cmd)).
+		WithArgs(testTodo.ID).
+		WillReturnRows(sqlmock.NewRows([]string{"id", "content", "user_id", "created_at"}).AddRow(testTodo.ID, testTodo.Content, testUser.ID, testTodo.CreatedAt))
 
-// 	//作成処理テスト
-// 	for _, task := range taskList {
-// 		err = u.CreateTodo(task)
-// 		if err != nil {
-// 			t.Errorf("Failed create todo. err = %v", err)
-// 		}
-// 	}
+	//取得の実行
+	todo, err := GetTodo(Db, testTodo.ID)
+	assert.Nil(t, err)
+	assert.Nil(t, deep.Equal(todo.Content, testTodo.Content))
 
-// 	//全タスクの取得テスト
-// 	allTodos, err := GetTodos()
-// 	if err != nil {
-// 		t.Errorf("Failed get all todos. err = %v", err)
-// 	} else if len(allTodos) == 0 {
-// 		t.Errorf("Failed to get registed todos.")
-// 	}
+}
 
-// 	//作成したタスクの確認処理
-// 	todos, err := u.GetTodosByUser()
-// 	if err != nil {
-// 		t.Errorf("Failed get todos by userID. err = %v", err)
-// 	}
-// 	for i, todo := range todos {
-// 		t.Logf("ID:%v / content:%v / userID:%v", strconv.Itoa(todo.ID), todo.Content, strconv.Itoa(todo.UserID))
-// 		//削除処理テスト
-// 		defer func() {
-// 			//最後に今回作成したタスク情報を削除する
-// 			err = todo.DeleteTodo()
-// 			if err != nil {
-// 				t.Errorf("Failed delete todo. err = %v", err)
-// 			}
-// 		}()
+//全取得処理のテスト
+func TestTodosGet(t *testing.T) {
+	cmd := `select id, content, user_id, created_at from todos`
 
-// 		//単一タスク取得テスト
-// 		todo, err := GetTodo(todo.ID)
-// 		if err != nil {
-// 			t.Errorf("Failed get todo. err = %v", err)
-// 		} else if taskList[i] != todo.Content {
-// 			//想定通りの値が登録されているか確認
-// 			t.Errorf("There are discrepancies in resisted values.  expected =%v  / registed = %v", taskList[i], todo.Content)
-// 		}
-// 		fmt.Println(todo.Content)
+	//dbモックを作成
+	Db, mock := NewMock()
+	defer Db.Close()
 
-// 	}
+	//取得の期待値を定義
+	mock.ExpectQuery(regexp.QuoteMeta(cmd)).
+		WillReturnRows(sqlmock.NewRows([]string{"id", "content", "user_id", "created_at"}).AddRow(testTodo.ID, testTodo.Content, testUser.ID, testTodo.CreatedAt))
 
-// 	//タスクの更新処理テスト
-// 	todos[0].Content = updateContent
-// 	err = todos[0].UpdateTodo()
-// 	if err != nil {
-// 		t.Errorf("Failed update todo. err = %v", err)
-// 	} else {
-// 		//文言が更新されているか確認
-// 		updatedTodo, _ := GetTodo(todos[0].ID)
-// 		if updatedTodo.Content != updateContent {
-// 			t.Logf("There are discrepancies in updated values.  expected =%v  / registed = %v", updateContent, updatedTodo.Content)
-// 		}
-// 	}
-//}
+	//取得の実行
+	todo, err := GetTodos(Db)
+	assert.Nil(t, err)
+	assert.Nil(t, deep.Equal(todo[0].Content, testTodo.Content))
+}
+
+//ユーザーに応じた取得処理のテスト
+func TestTodoGetByUser(t *testing.T) {
+	cmd := `select id, content, user_id, created_at from todos
+	where user_id = ?`
+
+	//dbモックを作成
+	Db, mock := NewMock()
+	defer Db.Close()
+
+	//取得の期待値を定義
+	mock.ExpectQuery(regexp.QuoteMeta(cmd)).
+		WillReturnRows(sqlmock.NewRows([]string{"id", "content", "user_id", "created_at"}).AddRow(testTodo.ID, testTodo.Content, testUser.ID, testTodo.CreatedAt))
+
+	//取得の実行
+	todo, err := testUser.GetTodosByUser(Db)
+	assert.Nil(t, err)
+	assert.Nil(t, deep.Equal(todo[0].Content, testTodo.Content))
+}
+
+//更新処理のテスト
+func TestTodoUpdate(t *testing.T) {
+	cmd := "update todos set content = ?, user_id = ? where id = ?"
+	cmdSelect := `select id, content, user_id, created_at from todos where id = ?`
+	afterContent := "Updated Task"
+
+	//dbモックを作成
+	Db, mock := NewMock()
+	defer Db.Close()
+
+	//SQL実行の期待値を定義
+	mock.ExpectExec(regexp.QuoteMeta(cmd)).
+		WithArgs(afterContent, testUser.ID, testTodo.ID).
+		WillReturnResult(sqlmock.NewResult(1, 1))
+
+	//更新処理を実行
+	testTodoUpdate := testTodo
+	testTodoUpdate.Content = afterContent
+	err := testTodoUpdate.UpdateTodo(Db)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	//更新結果の取得
+	mock.ExpectQuery(regexp.QuoteMeta(cmdSelect)).
+		WithArgs(testTodo.ID).
+		WillReturnRows(sqlmock.NewRows([]string{"id", "content", "user_id", "created_at"}).AddRow(testTodo.ID, afterContent, testTodo.UserID, testTodo.CreatedAt))
+
+	//取得の実行
+	todo, err := GetTodo(Db, testTodo.ID)
+	assert.Nil(t, err)
+	assert.Nil(t, deep.Equal(todo.Content, afterContent))
+
+}
+
+//削除処理のテスト
+func TestTodoDelete(t *testing.T) {
+	cmd := "delete from todos where id = ?"
+
+	//dbモックを作成
+	Db, mock := NewMock()
+	defer Db.Close()
+
+	//SQL実行の期待値を定義
+	mock.ExpectExec(regexp.QuoteMeta(cmd)).
+		WithArgs(testTodo.ID).
+		WillReturnResult(sqlmock.NewResult(1, 1))
+
+	//削除処理の実行
+	err := testTodo.DeleteTodo(Db)
+	assert.Nil(t, err)
+}
+
+type AnyTime struct{}
+
+func (a AnyTime) Match(v driver.Value) bool {
+	_, ok := v.(time.Time)
+	return ok
+}
