@@ -33,7 +33,7 @@ func index(w http.ResponseWriter, r *http.Request) {
 			log.Println(err)
 		}
 		//ユーザーに紐づくタスクを取得する
-		todos, _ := user.GetTodosByUser()
+		todos, _ := user.GetTodosByUser(models.Db)
 		user.Todos = todos
 		//セッションが存在する場合はタスク表示画面に遷移する
 		generateHTML(w, user, "layout", "private_navbar", "index")
@@ -74,7 +74,7 @@ func todoSave(w http.ResponseWriter, r *http.Request) {
 
 		//フォームから入力内容を受け取る
 		content := r.PostFormValue("content")
-		if err := user.CreateTodo(content); err != nil {
+		if err := user.CreateTodo(models.Db, content); err != nil {
 			log.Println(err)
 		}
 
@@ -97,7 +97,7 @@ func todoEdit(w http.ResponseWriter, r *http.Request, id int) {
 			log.Println(err)
 		}
 		//編集対象のタスクを取得する
-		t, err := models.GetTodo(id)
+		t, err := models.GetTodo(models.Db, id)
 		if err != nil {
 			log.Println(err)
 		}
@@ -130,7 +130,7 @@ func todoUpdate(w http.ResponseWriter, r *http.Request, id int) {
 		t := &models.Todo{ID: id, Content: content, UserID: user.ID}
 
 		//タスクの更新処理
-		if err := t.UpdateTodo(); err != nil {
+		if err := t.UpdateTodo(models.Db); err != nil {
 			log.Println(err)
 		}
 
@@ -154,13 +154,13 @@ func todoDelete(w http.ResponseWriter, r *http.Request, id int) {
 		}
 
 		//削除対象のタスクを取得
-		t, err := models.GetTodo(id)
+		t, err := models.GetTodo(models.Db, id)
 		if err != nil {
 			log.Println(err)
 		}
 
 		//タスクを削除する
-		if err := t.DeleteTodo(); err != nil {
+		if err := t.DeleteTodo(models.Db); err != nil {
 			log.Println(err)
 		}
 
