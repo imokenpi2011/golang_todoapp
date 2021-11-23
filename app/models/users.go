@@ -1,6 +1,7 @@
 package models
 
 import (
+	"database/sql"
 	"log"
 	"time"
 )
@@ -16,7 +17,7 @@ type User struct {
 }
 
 //ユーザーを作成する
-func (u *User) CreateUser() (err error) {
+func (u *User) CreateUser(db *sql.DB) (err error) {
 	//SQL文を指定
 	cmd := `insert into users (
 		uuid,
@@ -40,7 +41,7 @@ func (u *User) CreateUser() (err error) {
 }
 
 //ユーザー情報を取得する
-func GetUser(id int) (user User, err error) {
+func GetUser(db *sql.DB, id int) (user User, err error) {
 	//ユーザーインスタンスを宣言
 	user = User{}
 
@@ -60,7 +61,7 @@ func GetUser(id int) (user User, err error) {
 }
 
 //ユーザーを更新する
-func (u *User) UpdateUser() (err error) {
+func (u *User) UpdateUser(db *sql.DB) (err error) {
 	//SQL文を設定
 	cmd := `update users set name = ?, email = ? where id = ?`
 
@@ -73,7 +74,7 @@ func (u *User) UpdateUser() (err error) {
 }
 
 //ユーザーを削除する
-func (u *User) DeleteUser() (err error) {
+func (u *User) DeleteUser(db *sql.DB) (err error) {
 	//SQL文を作成
 	cmd := `delete from users where id = ?`
 
@@ -86,7 +87,7 @@ func (u *User) DeleteUser() (err error) {
 }
 
 //ログイン用ユーザー検索
-func GetUserByEmail(email string) (user User, err error) {
+func GetUserByEmail(db *sql.DB, email string) (user User, err error) {
 	user = User{}
 	cmd := `select id, uuid, name, email, password, created_at
 	from users where email = ?`

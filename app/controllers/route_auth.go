@@ -34,7 +34,7 @@ func signup(w http.ResponseWriter, r *http.Request) {
 			PassWord: r.PostFormValue("password"),
 		}
 		//ユーザーを作成する
-		if err := user.CreateUser(); err != nil {
+		if err := user.CreateUser(models.Db); err != nil {
 			log.Println(err)
 		}
 
@@ -65,7 +65,7 @@ func authenticate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//フォームから値をもとにユーザーを検索する
-	user, err := models.GetUserByEmail(r.PostFormValue("email"))
+	user, err := models.GetUserByEmail(models.Db, r.PostFormValue("email"))
 	if err != nil {
 		log.Panicln(err)
 		http.Redirect(w, r, "/login", http.StatusFound)
