@@ -74,13 +74,13 @@ func authenticate(w http.ResponseWriter, r *http.Request) {
 	//パスワードを検証する
 	if user.PassWord == models.Encrypt(r.PostFormValue("password")) {
 		//セッションを作成する
-		err := user.CreateSession()
+		err := user.CreateSession(models.Db)
 		if err != nil {
 			log.Println(err)
 		}
 
 		//作成したセッションを取得する
-		session, err := models.GetSession(user.ID, user.Email)
+		session, err := models.GetSession(models.Db, user.ID, user.Email)
 		if err != nil {
 			log.Println(err)
 		}
@@ -116,7 +116,7 @@ func logout(w http.ResponseWriter, r *http.Request) {
 	//クッキーの存在エラー以外の場合はセッションを削除する
 	if err != http.ErrNoCookie {
 		session := models.Session{UUID: cookie.Value}
-		session.DeleteSessionByUUID()
+		session.DeleteSessionByUUID(models.Db)
 	}
 	http.Redirect(w, r, "/login", http.StatusFound)
 }

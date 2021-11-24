@@ -1,6 +1,7 @@
 package models
 
 import (
+	"database/sql"
 	"log"
 	"time"
 )
@@ -15,7 +16,7 @@ type Session struct {
 }
 
 //セッションを作成する
-func (u *User) CreateSession() (err error) {
+func (u *User) CreateSession(db *sql.DB) (err error) {
 	//SQL文を設定
 	cmd1 := `insert into sessions (
 		uuid,
@@ -33,7 +34,7 @@ func (u *User) CreateSession() (err error) {
 }
 
 //生成したセッションを取得する
-func GetSession(id int, email string) (session Session, err error) {
+func GetSession(db *sql.DB, id int, email string) (session Session, err error) {
 	//セッションインスタンスを宣言
 	session = Session{}
 
@@ -53,7 +54,7 @@ func GetSession(id int, email string) (session Session, err error) {
 }
 
 //セッションをもとにユーザーを取得する
-func (sess *Session) GetUserBySession() (user User, err error) {
+func (sess *Session) GetUserBySession(db *sql.DB) (user User, err error) {
 	user = User{}
 	cmd := `select id, uuid, name, email, created_at FROM users
 	where id = ?`
@@ -68,7 +69,7 @@ func (sess *Session) GetUserBySession() (user User, err error) {
 }
 
 //セッションをUUIDで検証する
-func (sess *Session) CheckSession() (valid bool, err error) {
+func (sess *Session) CheckSession(db *sql.DB) (valid bool, err error) {
 	cmd := `select id, uuid, email, user_id, created_at
 	from sessions where uuid = ?`
 
@@ -93,7 +94,7 @@ func (sess *Session) CheckSession() (valid bool, err error) {
 }
 
 //UUIDに一致するセッションを削除する。
-func (sess *Session) DeleteSessionByUUID() (err error) {
+func (sess *Session) DeleteSessionByUUID(db *sql.DB) (err error) {
 	cmd := `delete from sessions where uuid = ?`
 	_, err = Db.Exec(cmd, sess.UUID)
 	if err != nil {
